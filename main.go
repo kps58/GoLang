@@ -19,7 +19,7 @@ import (
 
 type Todo struct
 {
-	ID 			primitive.ObjectID 	`json:"id,omitempty" bson:"_id,omitempty"` //omitempty tells  not to use duplicate Key values
+	ID 			primitive.ObjectID 	`json:"_id,omitempty" bson:"_id,omitempty"` //omitempty tells  not to use duplicate Key values
 	Completed 	bool  	`json:"completed"`
 	Body 		string 	`json:"body"`
 }
@@ -31,10 +31,12 @@ func main() {
 	
 	fmt.Println(" Welcome to Go World")
 
-
-err  := godotenv.Load(".env")
+if os.Getenv("ENV")  != "production"{
+	err  := godotenv.Load(".env")
 if err != nil {
 	log.Fatal("Unable to load .env file",err)
+}
+
 }
 
 MONGODB_URI := os.Getenv("MONGODB_URI")
@@ -62,12 +64,23 @@ collection = client.Database("golang_db").Collection("todos")
 app := fiber.New()
 
 
+//Client in development mode use this
+// app.Use(cors.New(cors.Config{
+// 	AllowOrigins: "http://localhost:5173",
+// 	AllowHeaders: "Origin,Content-Type,Accept",
+// }))
+
 
 PORT := os.Getenv("PORT")
 
 if PORT == ""{
 	PORT = "5000"
 }
+
+if os.Getenv("ENV") == "Production"{
+	app.Static("/","./client/dist")
+}
+
 
 app.Get("/api/todos", getTodos)
 app.Post("/api/todos", createToo)
@@ -120,11 +133,8 @@ return c.Status(200).JSON(todo)
 }
 
 func updateTodo(c *fiber.Ctx) error{
-	todo := new(Todo)
 	id := c.Params("id")
-	if errdata  :=  c.BodyParser(todo); errdata != nil {
-		return errdata
-	}
+
 	objectID, err := primitive.ObjectIDFromHex(id)
 
 	if err != nil{
@@ -132,7 +142,7 @@ func updateTodo(c *fiber.Ctx) error{
 	}
 
 	filter := bson.M{"_id":objectID}
-	update := bson.M{"$set":bson.M{"completed":true,"body":todo.Body}}
+	update := bson.M{"$set":bson.M{"completed":true}}
 
 	_,err = collection.UpdateOne(context.Background(),filter,update)
     if err != nil{
