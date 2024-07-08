@@ -77,7 +77,7 @@ if PORT == ""{
 	PORT = "5000"
 }
 
-if os.Getenv("ENV") == "Production"{
+if os.Getenv("ENV") == "production"{
 	app.Static("/","./client/dist")
 }
 
