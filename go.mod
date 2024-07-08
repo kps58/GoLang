@@ -1,6 +1,6 @@
 module github.com/kps58/GoLang
 
-go 1.12.0
+go 1.22.4
 
 require (
 	github.com/andybalholm/brotli v1.1.0 // indirect
